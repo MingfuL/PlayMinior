@@ -86,49 +86,49 @@ public class MinionView extends View {
         }
     }
 
-    /**
-     * @param origin
-     * @param isWidth 是否在测量宽
-     * @return
-     */
-    private int measure(int origin, boolean isWidth) {
-        Log.v(Tag, "measure");
-        int result;
-        int specMode = MeasureSpec.getMode(origin);
-        int specSize = MeasureSpec.getSize(origin);
-        switch (specMode) {
-            case MeasureSpec.EXACTLY:
-            case MeasureSpec.AT_MOST:
-                result = specSize;
-                if (isWidth) {
-                    widthForUnspecified = result;
-                } else {
-                    heightForUnspecified = result;
-                }
-                break;
-            case MeasureSpec.UNSPECIFIED:
-            default:
-                if (isWidth) {//宽或高未指定的情况下，可以由另一端推算出来 - -如果两边都没指定就用默认值
-                    result = (int) (heightForUnspecified * BODY_WIDTH_HEIGHT_SCALE);
-                } else {
-                    result = (int) (widthForUnspecified / BODY_WIDTH_HEIGHT_SCALE);
-                }
-                if (result == 0) {
-                    result = DEFAULT_SIZE;
-                }
-
-                break;
-        }
-
-        return result;
-    }
-
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        Log.v(Tag, "onMeasure");
-        //自己计算尺寸的时候，直接调用 setMeasuredDimension（width, height),别用 super.onDraw()
-        setMeasuredDimension(measure(widthMeasureSpec, true), measure(heightMeasureSpec, false));
-    }
+//    /**
+//     * @param origin
+//     * @param isWidth 是否在测量宽
+//     * @return
+//     */
+//    private int measure(int origin, boolean isWidth) {
+//        Log.v(Tag, "measure");
+//        int result;
+//        int specMode = MeasureSpec.getMode(origin);
+//        int specSize = MeasureSpec.getSize(origin);
+//        switch (specMode) {
+//            case MeasureSpec.EXACTLY:
+//            case MeasureSpec.AT_MOST:
+//                result = specSize;
+//                if (isWidth) {
+//                    widthForUnspecified = result;
+//                } else {
+//                    heightForUnspecified = result;
+//                }
+//                break;
+//            case MeasureSpec.UNSPECIFIED:
+//            default:
+//                if (isWidth) {//宽或高未指定的情况下，可以由另一端推算出来 - -如果两边都没指定就用默认值
+//                    result = (int) (heightForUnspecified * BODY_WIDTH_HEIGHT_SCALE);
+//                } else {
+//                    result = (int) (widthForUnspecified / BODY_WIDTH_HEIGHT_SCALE);
+//                }
+//                if (result == 0) {
+//                    result = DEFAULT_SIZE;
+//                }
+//
+//                break;
+//        }
+//
+//        return result;
+//    }
+//
+//    @Override
+//    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+//        Log.v(Tag, "onMeasure");
+//        //自己计算尺寸的时候，直接调用 setMeasuredDimension（width, height),别用 super.onDraw()
+//        setMeasuredDimension(measure(widthMeasureSpec, true), measure(heightMeasureSpec, false));
+//    }
 
     @Override
     protected void onDraw(Canvas canvas) {
