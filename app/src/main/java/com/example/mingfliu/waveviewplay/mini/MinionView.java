@@ -117,8 +117,9 @@ public class MinionView extends View {
     }
 
     private void drawCloth(Canvas canvas) {
-        resetPaint(colorClothe, Paint.Style.FILL);
 
+        //衣服下半圆
+        resetPaint(colorClothe, Paint.Style.FILL);
         RectF clotheRectArc = new RectF();
         clotheRectArc.top = bodyRect.bottom - 2 * bodyRadius;
         clotheRectArc.left = bodyRect.left;
@@ -126,8 +127,50 @@ public class MinionView extends View {
         clotheRectArc.bottom = clotheRectArc.top + 2 * bodyRadius;
         canvas.drawArc(clotheRectArc, 0, 180, true, mPaint);
 
+        //衣服口袋
+        resetPaint(colorClothe, Paint.Style.FILL);
         RectF clotheRect = new RectF();
         clotheRect.left = clotheRectArc.left + (clotheRectArc.right - clotheRectArc.left) / 3;
+        clotheRect.right = clotheRect.left + (clotheRectArc.right - clotheRectArc.left) / 3;
+        clotheRect.top = clotheRectArc.top + bodyRadius - (clotheRect.right - clotheRect.left) * BODY_WIDTH_HEIGHT_SCALE;
+        clotheRect.bottom = clotheRectArc.top + bodyRadius + mStrokeWidth;
+        canvas.drawRoundRect(clotheRect, 1, 1, mPaint);
+
+        //描边
+        resetPaint(colorStroke, Paint.Style.STROKE, mStrokeWidth);
+        float[] points = getLines(clotheRectArc, clotheRect);
+        canvas.drawLines(points, mPaint);
+
+    }
+
+    private float[] getLines(RectF clotheRectArc, RectF clotheRect) {
+        float[] temp = new float[20];
+        temp[0] = clotheRectArc.left;
+        temp[1] = clotheRectArc.top + bodyRadius;
+        temp[2] = clotheRect.left;
+        temp[3] = temp[1];
+
+        temp[4] = temp[2];
+        temp[5] = temp[3];
+        temp[6] = clotheRect.left;
+        temp[7] = clotheRect.top;
+
+        temp[8] = temp[6];
+        temp[9] = temp[7];
+        temp[10] = clotheRect.right;
+        temp[11] = clotheRect.top;
+
+        temp[12] = temp[10];
+        temp[13] = temp[11];
+        temp[14] = clotheRect.right;
+        temp[15] = clotheRect.bottom - mStrokeWidth;
+
+        temp[16] = temp[14];
+        temp[17] = temp[15];
+        temp[18] = clotheRectArc.right;
+        temp[19] = clotheRectArc.top + bodyRadius;
+
+        return temp;
     }
 
 
