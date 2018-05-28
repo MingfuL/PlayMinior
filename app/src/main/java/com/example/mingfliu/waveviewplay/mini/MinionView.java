@@ -16,25 +16,21 @@ import android.view.View;
 
 public class MinionView extends View {
 
+    private static final float BODY_SCALE = 0.9f;//身体主干占整个view的比重
+    private static final float BODY_WIDTH_HEIGHT_SCALE = 0.6f; //身体的比例设定为 w:h = 3:5
+    private static final int DEFAULT_SIZE = 200; //View默认大小
     private final String Tag = "[MinionView]";
-
-    private int colorBody = Color.rgb(249, 217, 70);//衣服的颜色
-
+    private int colorBody = Color.rgb(249, 217, 70);//身体的颜色
+    private int colorClothe = Color.rgb(32, 116, 160);//衣服的颜色
+    private int colorStroke = Color.BLACK;
     private Paint mPaint;
     private float bodyWidth;
     private float bodyHeigh;
-    private static final float BODY_SCALE = 0.6f;//身体主干占整个view的比重
-    private static final float BODY_WIDTH_HEIGHT_SCALE = 0.6f; //身体的比例设定为 w:h = 3:5
-
     private float mStrokeWidth = 4f;//描边宽度
     private RectF bodyRect;
     private float bodyRadius;
-
     private boolean initParamsSuccess = false;
     private boolean initPaintSuccess = false;
-
-
-    private static final int DEFAULT_SIZE = 200; //View默认大小
     private int widthForUnspecified;
     private int heightForUnspecified;
 
@@ -60,17 +56,24 @@ public class MinionView extends View {
         }
     }
 
-    private void resetPaint(int color, Paint.Style style){
+    private void resetPaint(int color, Paint.Style style) {
         mPaint.reset();
         mPaint.setColor(color);
         mPaint.setStyle(style);
     }
 
+    private void resetPaint(int color, Paint.Style style, float mStrokeWidth) {
+        mPaint.reset();
+        mPaint.setColor(color);
+        mPaint.setStyle(style);
+        mPaint.setStrokeWidth(mStrokeWidth);
+    }
+
     private void initParams() {
         if (!initParamsSuccess) {
             Log.v(Tag, "initParams");
-            bodyWidth = Math.min(getWidth(), getHeight()) * BODY_SCALE;
-            bodyHeigh = bodyWidth / BODY_WIDTH_HEIGHT_SCALE;
+            bodyWidth = Math.min(getWidth(), getHeight()) * BODY_SCALE * BODY_WIDTH_HEIGHT_SCALE;
+            bodyHeigh = Math.min(getWidth(), getHeight()) * BODY_SCALE;
             mStrokeWidth = Math.max(bodyWidth / 50, mStrokeWidth);
 
             //设置身体矩形的位置(居中)
@@ -86,7 +89,49 @@ public class MinionView extends View {
         }
     }
 
-//    /**
+    @Override
+    protected void onDraw(Canvas canvas) {
+        Log.v(Tag, "onDraw");
+        super.onDraw(canvas);
+        drawBody(canvas);
+        drawCloth(canvas);
+        drawBodyStroke(canvas);
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        Log.v(Tag, "onLayout");
+        initParams();
+        initPaint();
+    }
+
+    private void drawBody(Canvas canvas) {
+        resetPaint(colorBody, Paint.Style.FILL);
+        canvas.drawRoundRect(bodyRect, bodyRadius, bodyRadius, mPaint);
+    }
+
+    private void drawBodyStroke(Canvas canvas) {
+        resetPaint(colorStroke, Paint.Style.STROKE, mStrokeWidth);
+        canvas.drawRoundRect(bodyRect, bodyRadius, bodyRadius, mPaint);
+    }
+
+    private void drawCloth(Canvas canvas) {
+        resetPaint(colorClothe, Paint.Style.FILL);
+
+        RectF clotheRectArc = new RectF();
+        clotheRectArc.top = bodyRect.bottom - 2 * bodyRadius;
+        clotheRectArc.left = bodyRect.left;
+        clotheRectArc.right = clotheRectArc.left + 2 * bodyRadius;
+        clotheRectArc.bottom = clotheRectArc.top + 2 * bodyRadius;
+        canvas.drawArc(clotheRectArc, 0, 180, true, mPaint);
+
+        RectF clotheRect = new RectF();
+        clotheRect.left = clotheRectArc.left + (clotheRectArc.right - clotheRectArc.left) / 3;
+    }
+
+
+    //    /**
 //     * @param origin
 //     * @param isWidth 是否在测量宽
 //     * @return
@@ -129,24 +174,4 @@ public class MinionView extends View {
 //        //自己计算尺寸的时候，直接调用 setMeasuredDimension（width, height),别用 super.onDraw()
 //        setMeasuredDimension(measure(widthMeasureSpec, true), measure(heightMeasureSpec, false));
 //    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        Log.v(Tag, "onDraw");
-        super.onDraw(canvas);
-        drawBody(canvas);
-    }
-
-    @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        super.onLayout(changed, left, top, right, bottom);
-        Log.v(Tag, "onLayout");
-        initParams();
-        initPaint();
-    }
-
-    private void drawBody(Canvas canvas) {
-        resetPaint(colorBody, Paint.Style.FILL);
-        canvas.drawRoundRect(bodyRect, bodyRadius, bodyRadius, mPaint);
-    }
 }
