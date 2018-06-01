@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.RectF;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -16,7 +17,7 @@ import android.view.View;
 
 public class MinionView extends View {
 
-    private static final float BODY_SCALE = 0.9f;//身体主干占整个view的比重
+    private static final float BODY_SCALE = 0.6f;//身体主干占整个view的比重
     private static final float BODY_WIDTH_HEIGHT_SCALE = 0.6f; //身体的比例设定为 w:h = 3:5
     private static final int DEFAULT_SIZE = 200; //View默认大小
     private final String Tag = "[MinionView]";
@@ -96,6 +97,7 @@ public class MinionView extends View {
         drawBody(canvas);
         drawCloth(canvas);
         drawBodyStroke(canvas);
+        drawFeet(canvas);
     }
 
     @Override
@@ -127,19 +129,97 @@ public class MinionView extends View {
         clotheRectArc.bottom = clotheRectArc.top + 2 * bodyRadius;
         canvas.drawArc(clotheRectArc, 0, 180, true, mPaint);
 
-        //衣服口袋
+        //衣服挂吊带
         resetPaint(colorClothe, Paint.Style.FILL);
         RectF clotheRect = new RectF();
-        clotheRect.left = clotheRectArc.left + (clotheRectArc.right - clotheRectArc.left) / 3;
-        clotheRect.right = clotheRect.left + (clotheRectArc.right - clotheRectArc.left) / 3;
-        clotheRect.top = clotheRectArc.top + bodyRadius - (clotheRect.right - clotheRect.left) * BODY_WIDTH_HEIGHT_SCALE;
+        clotheRect.left = clotheRectArc.left + (clotheRectArc.right - clotheRectArc.left) / 5;
+        clotheRect.right = clotheRectArc.right - (clotheRectArc.right - clotheRectArc.left) / 5;
+
+        float widthClothRect = clotheRect.right - clotheRect.left;
+
+        clotheRect.top = clotheRectArc.top + bodyRadius - widthClothRect * 0.5f;
         clotheRect.bottom = clotheRectArc.top + bodyRadius + mStrokeWidth;
+
+        float heightClothRect = clotheRect.bottom - clotheRect.top;
+
         canvas.drawRoundRect(clotheRect, 1, 1, mPaint);
 
         //描边
         resetPaint(colorStroke, Paint.Style.STROKE, mStrokeWidth);
         float[] points = getLines(clotheRectArc, clotheRect);
         canvas.drawLines(points, mPaint);
+
+        //画左边的吊带
+        resetPaint(colorClothe, Paint.Style.FILL);
+        Path mPathLeft = new Path();
+        mPathLeft.moveTo(clotheRectArc.left, clotheRectArc.top);
+        mPathLeft.lineTo(clotheRect.left + widthClothRect / 5, clotheRect.top + widthClothRect / 10);
+        mPathLeft.lineTo(clotheRect.left + widthClothRect / 10, clotheRect.top + widthClothRect / 5);
+        double w1 = Math.sqrt(Math.pow(widthClothRect / 6, 2) * 4);
+        w1 *= Math.cos(Math.PI / 4);
+        mPathLeft.lineTo(clotheRectArc.left, (float) (clotheRectArc.top + w1));
+        canvas.drawPath(mPathLeft, mPaint);
+        resetPaint(colorStroke, Paint.Style.STROKE, mStrokeWidth);
+        canvas.drawPath(mPathLeft, mPaint);
+
+        //画右边的吊带
+        resetPaint(colorClothe, Paint.Style.FILL);
+        Path mPathRight = new Path();
+        mPathRight.moveTo(clotheRectArc.right, clotheRectArc.top);
+        mPathRight.lineTo(clotheRect.right - widthClothRect / 5, clotheRect.top + widthClothRect / 10);
+        mPathRight.lineTo(clotheRect.right - widthClothRect / 10, clotheRect.top + widthClothRect / 5);
+        double w2 = Math.sqrt(Math.pow(widthClothRect / 6, 2) * 4);
+        w2 *= Math.cos(Math.PI / 4);
+        mPathRight.lineTo(clotheRectArc.right, (float) (clotheRectArc.top + w2));
+        canvas.drawPath(mPathRight, mPaint);
+        resetPaint(colorStroke, Paint.Style.STROKE, mStrokeWidth);
+        canvas.drawPath(mPathRight, mPaint);
+
+        resetPaint(colorStroke, Paint.Style.FILL);
+        canvas.drawCircle(clotheRect.left + widthClothRect / 10, clotheRect.top + widthClothRect / 10, mStrokeWidth, mPaint);
+        canvas.drawCircle(clotheRect.right - widthClothRect / 10, clotheRect.top + widthClothRect / 10, mStrokeWidth, mPaint);
+
+        //衣服口袋
+        resetPaint(colorStroke, Paint.Style.STROKE, mStrokeWidth);
+        Path pathPocket = new Path();
+        pathPocket.moveTo(clotheRect.left + widthClothRect / 4, clotheRect.top + heightClothRect / 2);
+        pathPocket.lineTo(clotheRect.right - widthClothRect / 4, clotheRect.top + heightClothRect / 2);
+        pathPocket.lineTo(clotheRect.right - widthClothRect / 4, clotheRect.top + heightClothRect);
+        RectF rectArc = new RectF(clotheRect.left + widthClothRect / 4,
+                clotheRect.top + heightClothRect / 2,
+                clotheRect.right - widthClothRect / 4,
+                clotheRect.top + heightClothRect * 3 / 2);
+        pathPocket.addArc(rectArc, 0, 180);
+        pathPocket.lineTo(clotheRect.left + widthClothRect / 4, clotheRect.top + heightClothRect / 2);
+        canvas.drawPath(pathPocket, mPaint);
+
+        resetPaint(colorStroke, Paint.Style.STROKE, mStrokeWidth);
+        float ww = clotheRectArc.right - clotheRectArc.left;
+        RectF leftPocketRect = new RectF();
+        leftPocketRect.top = clotheRectArc.top + ww / 4;
+        leftPocketRect.left = clotheRectArc.left - ww / 4;
+        leftPocketRect.right = clotheRectArc.left + ww / 4;
+        leftPocketRect.bottom = leftPocketRect.top + ww / 2;
+        Path leftPocketPath = new Path();
+        leftPocketPath.addArc(leftPocketRect, 30, 45);
+        canvas.drawPath(leftPocketPath, mPaint);
+
+        resetPaint(colorStroke, Paint.Style.STROKE, mStrokeWidth);
+        float ww1 = clotheRectArc.right - clotheRectArc.left;
+//        float hh = clotheRectArc.bottom - clotheRectArc.top;
+        RectF rightPocketRect = new RectF();
+        rightPocketRect.top = clotheRectArc.top + ww / 4;
+        rightPocketRect.left = clotheRectArc.right - ww / 4;
+        rightPocketRect.right = clotheRectArc.right + ww / 4;
+        rightPocketRect.bottom = rightPocketRect.top + ww / 2;
+        Path rightPocketPath = new Path();
+        rightPocketPath.addArc(rightPocketRect, 150, -45);
+        canvas.drawPath(rightPocketPath, mPaint);
+
+        float www = clotheRectArc.right - clotheRectArc.left;
+        resetPaint(colorStroke, Paint.Style.STROKE, mStrokeWidth);
+        canvas.drawLine(clotheRectArc.left + www / 2, clotheRectArc.bottom - www / 5,
+                clotheRectArc.left + www / 2, clotheRectArc.bottom, mPaint);
 
     }
 
@@ -173,6 +253,38 @@ public class MinionView extends View {
         return temp;
     }
 
+    private void drawFeet(Canvas canvas) {
+        mPaint.setStrokeWidth(mStrokeWidth);
+        mPaint.setColor(colorStroke);
+        mPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+
+        float width = bodyRect.right - bodyRect.left;
+        float height = bodyRect.bottom - bodyRect.top;
+
+        RectF leftFootRectA = new RectF(bodyRect.left + width * 0.4f - mStrokeWidth,
+                bodyRect.bottom,
+                bodyRect.left + width * 0.5f - mStrokeWidth,
+                bodyRect.bottom + height * 0.1f);
+        canvas.drawRect(leftFootRectA, mPaint);
+
+        RectF leftFootRectB = new RectF(bodyRect.left + width * 0.2f,
+                bodyRect.bottom + width * 0.05f,
+                bodyRect.left + width * 0.5f - mStrokeWidth,
+                bodyRect.bottom + height * 0.1f);
+        canvas.drawRoundRect(leftFootRectB, width * 0.1f, width * 0.1f, mPaint);
+
+        RectF rightFootRectA = new RectF(bodyRect.left + width * 0.5f + mStrokeWidth,
+                bodyRect.bottom,
+                bodyRect.left + width * 0.6f + mStrokeWidth,
+                bodyRect.bottom + height * 0.1f);
+        canvas.drawRect(rightFootRectA, mPaint);
+
+        RectF rightFootRectB = new RectF(bodyRect.left + width * 0.5f + mStrokeWidth,
+                bodyRect.bottom + width * 0.05f,
+                bodyRect.left + width * 0.8f,
+                bodyRect.bottom + height * 0.1f);
+        canvas.drawRoundRect(rightFootRectB, width * 0.1f, width * 0.1f, mPaint);
+    }
 
     //    /**
 //     * @param origin
