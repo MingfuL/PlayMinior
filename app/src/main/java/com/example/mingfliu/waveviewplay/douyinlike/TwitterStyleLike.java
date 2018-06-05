@@ -1,13 +1,16 @@
 package com.example.mingfliu.waveviewplay.douyinlike;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.drawable.Drawable;
-import android.support.annotation.DrawableRes;
+import android.graphics.Canvas;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -15,6 +18,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.example.mingfliu.waveviewplay.R;
 
@@ -24,19 +28,17 @@ import com.example.mingfliu.waveviewplay.R;
 
 public class TwitterStyleLike extends FrameLayout implements View.OnClickListener {
 
+    private final static String TAG = "TwitterStyleLike";
+
     private static final DecelerateInterpolator DECCELERATE_INTERPOLATOR = new DecelerateInterpolator();
-    private static final AccelerateDecelerateInterpolator ACCELERATE_DECELERATE_INTERPOLATOR = new AccelerateDecelerateInterpolator();
-    private static final OvershootInterpolator OVERSHOOT_INTERPOLATOR = new OvershootInterpolator(4);
+//    private static final AccelerateDecelerateInterpolator ACCELERATE_DECELERATE_INTERPOLATOR = new AccelerateDecelerateInterpolator();
+    private static final OvershootInterpolator OVERSHOOT_INTERPOLATOR = new OvershootInterpolator(2);
 
     private CircleView circleView;
-    private ImageView icon;
-    private int iconSize;
-    private Drawable likeDrawable;
-    private Drawable unLikeDrawable;
-    private boolean isChecked;
+    private TextView textView;
     private int circleStartColor;
     private int circleEndColor;
-    private Icon currentIcon;
+    private AnimatorSet animatorSet;
 
     public TwitterStyleLike(@NonNull Context context) {
         this(context, null);
@@ -52,106 +54,82 @@ public class TwitterStyleLike extends FrameLayout implements View.OnClickListene
     }
 
     private void init(Context context, AttributeSet attrs, int defStyleAttr) {
-
+        Log.d(TAG, "TwitterLike init-->begin inflate");
+        //inflate的时候，仅仅只是初始化里面的view，调用构造器，没有测量，没有布局，没有draw
         LayoutInflater.from(context).inflate(R.layout.likeview, this, true);
-        icon = findViewById(R.id.icon);
+        textView = findViewById(R.id.icon);
+        Log.d(TAG, "init-->findViewById before");
         circleView = findViewById(R.id.circle);
-
+        Log.d(TAG, "init-->findViewById after");
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.TwitterStyleLike, defStyleAttr, 0);
         //设置图标size
-        iconSize = typedArray.getDimensionPixelOffset(R.styleable.TwitterStyleLike_icon_size, -1);
-        if (iconSize == -1) {
-            iconSize = 40;
-        }
-        //设置点赞图标
-        likeDrawable = Utils.getDrawableFromResource(getContext(), typedArray, R.styleable.TwitterStyleLike_like_drawable);
-        if (likeDrawable!=null){
-            setLikeDrawable(likeDrawable);
-        }
+        circleStartColor = typedArray.getColor(R.styleable.TwitterStyleLike_circle_start_color, 0xFFFF5722);
+        circleEndColor = typedArray.getColor(R.styleable.TwitterStyleLike_circle_end_color, 0xFFFFC107);
 
-        unLikeDrawable = Utils.getDrawableFromResource(getContext(), typedArray, R.styleable.TwitterStyleLike_unlike_drawable);
+        circleView.setStartColor(circleStartColor);
+        circleView.setEndColor(circleEndColor);
 
-        if (unLikeDrawable != null) {
-            setUnlikeDrawable(unLikeDrawable);
-        }
-
-        circleStartColor = typedArray.getColor(R.styleable.TwitterStyleLike_circle_start_color, 0);
-
-        if (circleStartColor != 0) {
-            circleView.setStartColor(circleStartColor);
-        }
-
-        circleEndColor = typedArray.getColor(R.styleable.TwitterStyleLike_circle_end_color, 0);
-
-        if (circleEndColor != 0) {
-            circleView.setEndColor(circleEndColor);
-        }
-
-        if (likeDrawable == null && unLikeDrawable == null) {
-            setIcon();
-        }
-    }
-
-    private void setIcon() {
-        setLikeDrawableRes(currentIcon.getOnIconResourceId());
-        setUnlikeDrawableRes(currentIcon.getOffIconResourceId());
-        icon.setImageDrawable(this.unLikeDrawable);
-    }
-
-    public void setLikeDrawableRes(@DrawableRes int resId) {
-        likeDrawable = ContextCompat.getDrawable(getContext(), resId);
-
-        if (iconSize != 0) {
-            likeDrawable = Utils.resizeDrawable(getContext(), likeDrawable, iconSize, iconSize);
-        }
-
-        if (isChecked) {
-            icon.setImageDrawable(likeDrawable);
-        }
-    }
-
-    public void setUnlikeDrawableRes(@DrawableRes int resId) {
-        unLikeDrawable = ContextCompat.getDrawable(getContext(), resId);
-
-        if (iconSize != 0) {
-            unLikeDrawable = Utils.resizeDrawable(getContext(), unLikeDrawable, iconSize, iconSize);
-        }
-
-        if (!isChecked) {
-            icon.setImageDrawable(unLikeDrawable);
-        }
-    }
-
-    private void setUnlikeDrawable(Drawable unLikeDrawable) {
-        this.unLikeDrawable = unLikeDrawable;
-
-        if (iconSize != 0) {
-            this.unLikeDrawable = Utils.resizeDrawable(getContext(), unLikeDrawable, iconSize, iconSize);
-        }
-
-        if (!isChecked) {
-            icon.setImageDrawable(this.unLikeDrawable);
-        }
-    }
-
-    /**
-     * 设置点赞之后的团
-     * @param likeDrawable
-     */
-    private void setLikeDrawable(Drawable likeDrawable) {
-        this.likeDrawable = likeDrawable;
-
-        if (iconSize != 0) {
-            this.likeDrawable = Utils.resizeDrawable(getContext(), likeDrawable, iconSize, iconSize);
-        }
-
-        if (isChecked) {
-            icon.setImageDrawable(this.likeDrawable);
-        }
+        Log.d(TAG, "TwitterStyleLike after init");
     }
 
     @Override
     public void onClick(View v) {
 
+    }
+
+    public void setContent(String s){
+        textView.setText(s);
+    }
+
+    public void startAnimate(){
+        textView.animate().cancel();
+        textView.setScaleX(0);
+        textView.setScaleY(0);
+        circleView.setInnerCircleRadiusProgress(0);
+        circleView.setOuterCircleRadiusProgress(0);
+
+        animatorSet = new AnimatorSet();
+
+        ObjectAnimator outerCircleAnimator = ObjectAnimator.ofFloat(circleView, CircleView.OUTER_CIRCLE_RADIUS_PROGRESS, 0.1f, 1f);
+        outerCircleAnimator.setDuration(550);
+        outerCircleAnimator.setInterpolator(DECCELERATE_INTERPOLATOR);
+
+        ObjectAnimator innerCircleAnimator = ObjectAnimator.ofFloat(circleView, CircleView.INNER_CIRCLE_RADIUS_PROGRESS, 0.1f, 1f);
+        innerCircleAnimator.setDuration(500);
+        innerCircleAnimator.setStartDelay(200);
+        innerCircleAnimator.setInterpolator(DECCELERATE_INTERPOLATOR);
+
+        ObjectAnimator starScaleYAnimator = ObjectAnimator.ofFloat(textView, ImageView.SCALE_Y, 0.2f, 1f);
+        starScaleYAnimator.setDuration(550);
+        starScaleYAnimator.setStartDelay(550);
+        starScaleYAnimator.setInterpolator(OVERSHOOT_INTERPOLATOR);
+
+        ObjectAnimator starScaleXAnimator = ObjectAnimator.ofFloat(textView, ImageView.SCALE_X, 0.2f, 1f);
+        starScaleXAnimator.setDuration(550);
+        starScaleXAnimator.setStartDelay(550);
+        starScaleXAnimator.setInterpolator(OVERSHOOT_INTERPOLATOR);
+
+        animatorSet.playTogether(
+                outerCircleAnimator,
+                innerCircleAnimator,
+                starScaleYAnimator,
+                starScaleXAnimator
+        );
+
+        animatorSet.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                circleView.setInnerCircleRadiusProgress(0);
+                circleView.setOuterCircleRadiusProgress(0);
+                textView.setScaleX(1);
+                textView.setScaleY(1);
+            }
+
+            @Override public void onAnimationEnd(Animator animation) {
+
+            }
+        });
+
+        animatorSet.start();
     }
 }

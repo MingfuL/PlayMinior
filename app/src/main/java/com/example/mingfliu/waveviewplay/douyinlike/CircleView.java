@@ -40,7 +40,7 @@ public class CircleView extends View {
     /**
      * 静态方法对非静态对象的属性进行操作
      */
-    private static final Property<CircleView, Float> INNER_CIRCLE_RADIUS_PROGRESS =
+    public static final Property<CircleView, Float> INNER_CIRCLE_RADIUS_PROGRESS =
             new Property<CircleView, Float>(Float.class, "innerCircleRadiusProgress") {
                 @Override
                 public Float get(CircleView object) {
@@ -81,6 +81,7 @@ public class CircleView extends View {
     }
 
     private void init() {
+        Log.d(TAG, "circle init");
         circlePaint.setStyle(Paint.Style.FILL);
         circlePaint.setAntiAlias(true);
         //遮挡效果，笔触是清除效果
@@ -89,6 +90,7 @@ public class CircleView extends View {
     }
 
     public void setSize(int width, int height) {
+        Log.d(TAG, "circle setSize");
         this.width = width;
         this.height = height;
         invalidate();
@@ -96,6 +98,8 @@ public class CircleView extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        Log.d(TAG, "circle onMeasure");
+        //因为这里会把父布局的size传进来
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         if (width != 0 && height != 0) {
             setMeasuredDimension(width, height);
@@ -104,6 +108,7 @@ public class CircleView extends View {
 
     /**
      * 在onLayout之前调用,每次出现尺寸变化则初始化 最大半径,bitmap和canvas
+     * 在这里，最终得到自定义View的大小
      *
      * @param w
      * @param h
@@ -112,8 +117,9 @@ public class CircleView extends View {
      */
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        Log.d(TAG, "circle onSizeChanged");
         super.onSizeChanged(w, h, oldw, oldh);
-        Log.d(TAG, "onSizeChanged");
+        Log.d(TAG, "onSizeChanged, w="+w);
         maxCircleSize = w / 2;
         //绑定bitmap和canvas，这样，在tempCanvas做的任何操作都是在bitmap上画
         tempBitmap = Bitmap.createBitmap(getWidth(), getWidth(), Bitmap.Config.ARGB_8888);
@@ -123,8 +129,8 @@ public class CircleView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        Log.d(TAG, "onDraw");
-        tempCanvas.drawColor(Color.WHITE);
+        Log.d(TAG, "circle onDraw");
+        tempCanvas.drawColor(0xffffff, PorterDuff.Mode.CLEAR);
         //画橙色外圈
         tempCanvas.drawCircle(getWidth() / 2, getHeight() / 2, outerCircleRadiusProgress * maxCircleSize, circlePaint);
         //画遮挡层
@@ -152,6 +158,9 @@ public class CircleView extends View {
         postInvalidate();
     }
 
+    /**
+     * 一个计算颜色过度比例的算法
+     */
     private void updateCircleColor() {
         float colorProgress = (float) Utils.clamp(outerCircleRadiusProgress, 0.5, 1);
         colorProgress = (float) Utils.mapValueFromRangeToRange(colorProgress, 0.5f, 1f, 0f, 1f);
