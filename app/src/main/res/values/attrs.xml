@@ -6,4 +6,14 @@
         <attr name="liked" format="boolean"/>
         <attr name="icon_size" format="dimension|reference"/>
     </declare-styleable>
+
+    <declare-styleable name="CoolFloatingButton">
+        <attr name="expand_orientation" format="enum">
+            <enum name="top" value="0"/>
+            <enum name="bottom" value="1"/>
+            <enum name="left" value="2"/>
+            <enum name="right" value="03"/>
+        </attr>
+    </declare-styleable>
+
 </resources>
